@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block con %}
+
+<div class ="container mt-5 mb-5">
+
+    <h1><b>{{ t.subject }}</b></h1>
+
+    <div class="row mt-5">
+        <div class="col-lg-8">
+            <textarea class="form-control" disabled style ="height:300px;">{{ t.content }}</textarea>
+        </div>
+        <div class="col-lg-4">
+            <img src = "{{ t.writer.getpic }}" width="100%">
+            <div class = "text-center mt-3">
+                <h4>written by <b>{{ t.writer | upper }}</b></h4>
+            </div>
+            <div class="text-end">
+                {{ t.pubdate | date:'m / d / Y H:i' }}
+            </div>
+        </div>
+    </div>
+
+    <div class = "text-end mt-4">
+        <a href="{% url 'board:index' %}"><button class="btn btn-dark">메인</button></a>
+        {% if user == t.writer %}
+        <a href="{% url 'board:update' t.id %}"><button class="btn btn-dark">수정</button></a>
+        <a href="{% url 'board:delete' t.id %}"><button class="btn btn-danger">삭제</button></a>
+        {% endif %}
+    </div>
+
+<!-- n : n 관계 -->
+    <div class="text-end mt-4">
+        <!-- {% for i in t.likey.all %}
+            {{i}}
+        {% endfor %}
+        님이 좋아합니다. -->
+        {% if user in t.likey.all %}
+            <a href="{% url 'board:unlikey' t.id %}" class="btn btn-danger">좋아요 취소</a>
+        {% else %}
+            <a href="{% url 'board:likey' t.id %}" class="btn btn-primary">좋아요</a>
+        {% endif %}
+        
+        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            즐겨찾기
+        </button>
+
+
+
+    </div>
+
+
+
+    <hr>
+    <form method = 'post' action="{% url 'board:creply' t.id %}">
+        {% csrf_token %}
+        <div class="row mt-5">
+            <div class="col-lg-10">
+                <input type="text" name="com" class="form-control">
+            </div>
+            <div class="col-lg-2">
+                <button class="btn btn-dark">댓글작성</button>
+            </div>
+        </div>      
+    </form>
+
+
+
+    <div class = "mt-5" >
+    {% if rset %}
+        <div class="row">
+            {% for i in rset %}
+                <div class="col-lg-3 text-center">
+                    <img src="{{ i.replyer.getpic }}" width="100%">
+                    <h5><b>{{ i.replyer }}</b></h5>
+                </div>
+                <div class="col-lg-9">
+                    <textarea class="form-control" style="height : 150px" disabled>{{ i.comment }}</textarea>
+                    <div class="text-end mt-2">
+                        {% if i.replyer == user %}
+                        <a href="{% url 'board:dreply' t.id i.id %}" class="btn btn-danger">댓글삭제</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+
+    {% else %}
+        <h3>첫번째 댓글을 달아주세요</h3>
+    {% endif %}   
+    </div>
+
+
+</div>
+
+
+
+
+<form method="POST" action="{% url 'book:create' %}">
+    {% csrf_token %}
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">즐겨찾기 추가 알림창</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-end">
+                        <input name="impo" type="checkbox" class="btn-check" id="btn-check-outlined" autocomplete="off">
+                        <label class="btn btn-outline-warning" for="btn-check-outlined">★</label><br>
+                    </div>
+                    <textarea class="form-control mt-3 mb-5" name="scon" placeholder="사이트를 간략하게 설명해주세요" style="height: 100px;"></textarea>
+                    <input type="hidden" name="sname" value="[BOARD]::{{b.subject}}">
+                    <input type="hidden" name="surl" value="{{request.path}}">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    <button class="btn btn-primary">추가</button>
+                </div>
+            </div>
+        </div>
+    </div>  
+</form>
+
+
+
+
+
+{% endblock %}

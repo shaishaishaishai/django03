@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block con %}
+<div class="container mt-5 mb-5" style="font-weight: bold; font-size: 20px;">
+    <h1><b>PDF READER</b></h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="exampleInputPassword1" class="form-label">PDF 첨부</label>
+            <input type="file" name="pdfr" class="form-control" id="exampleInputPassword1">
+        </div>
+        <div class="mt-4 text-end">
+            <button type="submit" class="btn btn-dark" style="font-weight: bold;">EXTRACT</button> 
+        </div>
+    </form>
+    <div class="mt-5">
+        <textarea class="form-control" style="height: 400px;" disabled>{{su}}</textarea>
+    </div>
+</div>
+
+{% endblock %}

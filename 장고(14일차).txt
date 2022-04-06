@@ -1,0 +1,143 @@
+■ 페이징
+
+레코드들을 한 페이지에 나타내기에는 내용이 많을 때가 많아요
+그래서 페이지로 구현을 해주는 기법을 말해요
+========================================================
+from django.core.paginator import Paginator
+
+def index(request):
+     b = Board.objects.all() # 모든 레코드를 가져와서
+     pag = Paginator(b, 10)
+          # 레코드들을 10개씩 잘라주는 pag 객체생성
+     obj = pag.get_page(1)
+          # pag 야 나 1페이지 obj 에 담아줘!
+     context = {
+       "blist":obj
+     }
+     return render(request,"....", context)
+========================================================
+
+하지만, 1 페이지를 고정적으로 띄워줄 것이 아니기에 page 번호도 인자로 받도록하자!
+GET 방식으로 사용하는게 일반적입니다. (노출되도 상관없고, 리소스를 적게먹음)
+
+========================================================
+def index(request):
+     page = request.GET.get("page", 1) 
+          # URL 에 page 로 전달되는 인자를 받아와라 (없으면 1로 설정)
+     b = Board.objects.all()
+     pag = Paginator(b, 10)
+     obj = pag.get_page(page)
+          # pag 야 나 page 페이지 obj 에 담아줘!
+     ...
+========================================================
+
+
+■ obj 객체로 할수있는 것들
+
+ - paginator.page_range(페이지범위) 
+       ex) 12 페이지 > range(1,13)
+ - paginator.num_pages
+       페이지수 (마지막페이지)
+ - number
+       현재 페이지 번호
+ - previous_page_number
+       이전 페이지 번호
+ - next_page_number
+       다음 페이지 번호
+ - has_previous
+       이전 페이지 유무
+ - has_next
+       다음 페이지 유무
+ - start_index
+       시작 인덱스 (해당페이지의)
+ - end_index
+       끝 인덱스 (해당페이지의)
+
+
+■ 템플릿에서의 연산
+
+ - 기본적으로 템플릿 필터를 통해서만 연산을 할 수 있다. 
+ - add (덧셈)만 지원한다.
+ > django-mathfilters 사용하자! (별도 설치가 필요)
+ -------------------------------------------
+  (1) pip install django-mathfilters 
+  (2) INSTALLED_APPS 에 등록
+  (3) 연산을 자유롭게 사용하고자하는 html 파일에
+      {% load mathfilters %}
+ -------------------------------------------
+
+
+■ 연산들
+
+ mathfilters 를 설치하면 다음과 같은 연산을 할 수 있음
+
+ A|_____:B   (__ 에 들어가는 키워드들)
+ 
+ 1) add (덧셈)         10|add:2       12
+ 2) sub (뺄셈)         10|sub:2       8
+ 3) mul (곱셈)         10|mul:2       20
+ 4) div (나눗셈)        10|div:2      5.0
+ 5) intdiv (몫)        10|intdiv:2    5
+ 6) mod (나머지)        10|mod:2       0
+
+ 
+※ 1+2x2 는 원래 곱셈의 우선순의를 고려해서 5 가 나오는게 맞지만
+  1|add:2|mul:2 와 같은 템플릿 필터에서는 차례대로 계산해주어야한다
+  즉, 위의 식의 결과는 1+2 = 3 을 한 후 3x2 가 처리되기 때문에 6 이된다.
+
+
+
+
+
+
+■ 페이징 예시
+
+위의 개념들을 적용해서 페이징 기능을 구현해보았다!
+================================================================================================================
+   {% if blist.has_previous %}
+       <a href="{% url 'index' %}?page=1"><button>HOME</button></a>
+       <a href="{% url 'index' %}?page={{ blist.previous_page_number }}"><button> < </button></a>
+   {% else %}
+       <button disabled>HOME</button>
+       <button disabled> < </button>
+   {% endif %}
+
+
+   {% for i in blist.paginator.page_range %}
+       {% if i >= blist.number|sub:1|intdiv:10|mul:10|add:1 and blist.number|sub:1|intdiv:10|add:1|mul:10 >= i %}
+           <a href="{% url 'index' %}?page={{i}}"><button>{% if blist.number == i %}★{% endif %}{{i}}</button></a>
+       {% endif %}
+   {% endfor %}
+
+   {% if blist.has_next %}
+       <a href="{% url 'index' %}?page={{ blist.next_page_number}}"><button> > </button></a>
+       <a href="{% url 'index' %}?page={{ blist.paginator.num_pages }}"><button> END </button></a>
+   {% else %}
+       <button disabled> > </button>
+       <button disabled> END </button>
+   {% endif %}
+================================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
